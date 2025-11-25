@@ -2,6 +2,8 @@ from fastapi import FastAPI, Request
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import os, datetime, uuid, httpx
+
+from bot import send_user_message
 from .database import SessionLocal, Base, engine
 from .models import Order
 from .crypto import convert_to_rub
@@ -92,6 +94,14 @@ async def crypto_webhook(request: Request):
         if status == "paid":
             order.status = "paid"
             db.commit()
+            import asyncio
+            asyncio.create_task(
+                send_user_message(
+                    chat_id=int(order.user_id),
+                    product_name=order.product,
+                    webapp_url="https://t.me/more_stars_bot/app"
+                )
+            )
     db.close()
     return {"status": "ok"}
 
