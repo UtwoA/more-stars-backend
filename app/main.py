@@ -78,7 +78,20 @@ async def crypto_webhook(request: Request):
     db = SessionLocal()
     order = db.query(Order).filter(Order.order_id == data.get("order_id")).first()
     if order:
-        order.status = data.get("status", order.status)
-        db.commit()
+        # разрешаем менять статус только на "paid"
+        if data.get("status") == "paid":
+            order.status = "paid"
+            db.commit()
     db.close()
     return {"status": "ok"}
+
+from fastapi import Query
+
+@app.get("/order_status")
+async def order_status(order_id: str = Query(...)):
+    db = SessionLocal()
+    order = db.query(Order).filter(Order.order_id == order_id).first()
+    db.close()
+    if order:
+        return {"order_id": order.order_id, "status": order.status}
+    return {"error": "Order not found"}
