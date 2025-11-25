@@ -121,9 +121,7 @@ async def order_status(order_id: str = Query(...)):
         return {"error": "Order not found"}
 
     # проверяем таймер до закрытия сессии
-    if order.status == "created" and order.expires_at < datetime.utcnow():
-        order.status = "failed"
-        db.commit()
+    check_order_expired(order, db)
 
     result = {"order_id": order.order_id, "status": order.status}
     db.close()
@@ -159,7 +157,7 @@ async def last_order_status(user_id: str = Query(...)):
             result["show_failure_page"] = True
             order.failure_page_shown = 1
             db.commit()
-
+        check_order_expired(order, db)
         db.close()
         return result
 
@@ -197,3 +195,9 @@ async def order_history(user_id: str = Query(...), limit: int = 10):
     ]
 
     return {"orders": result}
+
+
+def check_order_expired(order, db):
+    if order.status == "created" and order.expires_at < datetime.utcnow():
+        order.status = "failed"
+        db.commit()
