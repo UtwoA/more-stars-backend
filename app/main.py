@@ -75,15 +75,16 @@ async def create_order(order: OrderCreate):
 @app.post("/webhook/crypto")
 async def crypto_webhook(request: Request):
     data = await request.json()
+    print("WEBHOOK DATA:", data)
     db = SessionLocal()
     order = db.query(Order).filter(Order.order_id == data.get("order_id")).first()
     if order:
-        # разрешаем менять статус только на "paid"
         if data.get("status") == "paid":
             order.status = "paid"
             db.commit()
     db.close()
     return {"status": "ok"}
+
 
 from fastapi import Query
 
