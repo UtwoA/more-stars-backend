@@ -98,7 +98,9 @@ async def crypto_webhook(request: Request):
             db.commit()
             asyncio.create_task(
                 send_user_message(
-                    chat_id=int(order.user_id)
+                    chat_id=int(order.user_id),
+                    product_name=order.product,
+                    start_parameter="1"
                 )
             )
     db.close()

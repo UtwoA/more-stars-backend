@@ -5,22 +5,28 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 BOT_TOKEN = "8586920536:AAHmc9iFU073Zvj-Ebt9G9OtSut9FsWxB0c"
 bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode="HTML"))
 
-async def send_user_message(chat_id: int):
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
+async def send_user_message(chat_id: int, product_name: str, start_parameter: str):
+    # raw-кнопка для Main Mini App
+    raw_keyboard = {
+        "inline_keyboard": [
             [
-                InlineKeyboardButton(
-                    text="Открыть мини-приложение",
-                    request_main_web_view={
-                        "url": "https://t.me/more_stars_bot?startapp&mode=compact"
+                {
+                    "text": "Открыть приложение",
+                    "request_main_web_view": {
+                        "bot_username": "more_stars_bot",
+                        "start_parameter": start_parameter,
+                        "mode": "fullscreen"
                     }
-                )
+                }
             ]
         ]
-    )
+    }
+
+    # создаём клавиатуру bypass-ом типизации
+    keyboard = InlineKeyboardMarkup.model_construct(**raw_keyboard)
 
     await bot.send_message(
-        chat_id,
-        "Нажми кнопку для открытия мини-приложения:",
+        chat_id=chat_id,
+        text=f"🎉 Оплата за <b>{product_name}</b> прошла успешно!",
         reply_markup=keyboard
     )
