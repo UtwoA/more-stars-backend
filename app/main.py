@@ -107,3 +107,33 @@ async def order_status(order_id: str = Query(...)):
     if order:
         return {"order_id": order.order_id, "status": order.status}
     return {"error": "Order not found"}
+
+
+@app.get("/last_order_status")
+async def last_order_status(user_id: str = Query(...)):
+    db = SessionLocal()
+    order = (
+        db.query(Order)
+        .filter(Order.user_id == user_id)
+        .order_by(Order.timestamp.desc())
+        .first()
+    )
+
+    if order:
+        result = {
+            "order_id": order.order_id,
+            "status": order.status,
+            "product": order.product,
+            "show_success_page": False
+        }
+
+        if order.status == "paid" and order.success_page_shown == 0:
+            result["show_success_page"] = True
+            order.success_page_shown = 1  # ставим флаг, что страница показана
+            db.commit()
+
+        db.close()
+        return result
+
+    db.close()
+    return {"status": "none"}

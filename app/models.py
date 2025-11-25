@@ -14,3 +14,4 @@ class Order(Base):
     status = Column(String)
     type_of_payment = Column(String)
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    success_page_shown = Column(Integer, default=0)
