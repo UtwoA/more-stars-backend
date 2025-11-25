@@ -8,7 +8,7 @@ from .crypto import convert_to_rub
 
 load_dotenv()
 CRYPTOBOT_TOKEN = os.getenv("CRYPTOBOT_TOKEN")  # твой testnet токен
-CRYPTO_PAY_API_URL = "https://testnet-pay.crypt.bot/v1/invoice"
+CRYPTO_PAY_API_URL = "https://testnet-pay.crypt.bot/api/createInvoice"
 
 app = FastAPI()
 Base.metadata.create_all(bind=engine)
@@ -24,15 +24,16 @@ class OrderCreate(BaseModel):
 
 async def create_crypto_invoice(amount: float, currency: str, order_id: str, recipient: str):
     payload = {
-        "amount": amount,
-        "currency": currency,
-        "payload": order_id,
+        "currency_type": "crypto",        # тип платежа
+        "asset": currency.upper(),        # криптовалюта
+        "amount": amount,                 # сумма
         "description": f"Покупка {recipient}",
+        "payload": order_id,
         "allow_comments": False,
         "allow_anonymous": False
     }
     headers = {
-        "Authorization": f"Bearer {CRYPTOBOT_TOKEN}",
+        "Crypto-Pay-API-Token": CRYPTOBOT_TOKEN,
         "Content-Type": "application/json"
     }
     async with httpx.AsyncClient() as client:
@@ -70,11 +71,9 @@ async def create_order(order: OrderCreate):
         "crypto_invoice": invoice  # тут будет JSON с ссылкой на оплату
     }
 
-    return {"order_id": order_id, "amount_rub": amount_rub}
 
 @app.post("/webhook/crypto")
 async def crypto_webhook(request: Request):
-
     data = await request.json()
     db = SessionLocal()
     order = db.query(Order).filter(Order.order_id == data.get("order_id")).first()
