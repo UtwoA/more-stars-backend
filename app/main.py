@@ -15,9 +15,6 @@ app = FastAPI()
 async def crypto_webhook(request: Request, crypto_pay_api_signature: str = Header(...)):
     body = await request.body()
 
-    if not verify_signature(body, crypto_pay_api_signature):
-        return JSONResponse(status_code=400, content={"message": "Invalid signature"})
-
     data = await request.json()
     invoice_id = data.get("invoice_id")
     order_payload = data.get("payload")  # order_id
