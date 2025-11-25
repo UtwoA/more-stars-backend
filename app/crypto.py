@@ -3,7 +3,13 @@ import httpx
 BINANCE_API = "https://api.binance.com/api/v3/ticker/price"
 
 async def convert_to_rub(symbol: str, amount: float) -> float:
+    """
+    Конвертирует сумму в RUB.
+    symbol: 'USDT' или 'TON'
+    amount: количество криптовалюты
+    """
     async with httpx.AsyncClient() as client:
+        # Конвертируем TON → USDT, если нужно
         if symbol.upper() == "TON":
             r = await client.get(f"{BINANCE_API}?symbol=TONUSDT")
             ton_to_usdt = float(r.json()["price"])
@@ -11,6 +17,7 @@ async def convert_to_rub(symbol: str, amount: float) -> float:
         else:
             amount_usdt = amount  # USDT без конвертации
 
+        # USDT → RUB
         r = await client.get(f"{BINANCE_API}?symbol=USDTRUB")
         usdt_to_rub = float(r.json()["price"])
         return round(amount_usdt * usdt_to_rub, 2)
