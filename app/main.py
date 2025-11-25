@@ -111,6 +111,7 @@ async def order_status(order_id: str = Query(...)):
 
 @app.get("/last_order_status")
 async def last_order_status(user_id: str = Query(...)):
+    print("USER_ID:", user_id)
     db = SessionLocal()
     order = (
         db.query(Order)
