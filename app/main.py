@@ -9,6 +9,8 @@ from bot import send_user_message
 from .database import SessionLocal, Base, engine
 from .models import Order
 from .crypto import convert_to_rub
+from datetime import datetime, timedelta
+
 
 load_dotenv()
 CRYPTOBOT_TOKEN = os.getenv("CRYPTOBOT_TOKEN")  # твой testnet токен
@@ -60,7 +62,7 @@ async def create_order(order: OrderCreate):
         status="created",
         type_of_payment="crypto",
         timestamp=datetime.utcnow(),  # теперь корректно
-        expires_at=datetime.utcnow() + datetime.timedelta(minutes=30)
+        expires_at=datetime.utcnow() + timedelta(minutes=1)
     )
     db.add(db_order)
     db.commit()
@@ -109,8 +111,6 @@ async def crypto_webhook(request: Request):
 
 
 from fastapi import Query
-from datetime import datetime
-
 @app.get("/order_status")
 async def order_status(order_id: str = Query(...)):
     db = SessionLocal()

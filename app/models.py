@@ -1,5 +1,7 @@
 from sqlalchemy import Column, String, Integer, Float, DateTime
 from .database import Base
+from datetime import datetime, timedelta
+
 import datetime
 
 class Order(Base):
@@ -16,4 +18,4 @@ class Order(Base):
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
     success_page_shown = Column(Integer, default=0)
     failure_page_shown = Column(Integer, default=0)
-    expires_at = Column(DateTime, default=lambda: datetime.utcnow() + datetime.timedelta(minutes=30))
+    expires_at = Column(DateTime, default=lambda: datetime.utcnow() + timedelta(minutes=30))
