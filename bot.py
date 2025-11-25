@@ -4,13 +4,17 @@ from aiogram.client.default import DefaultBotProperties
 BOT_TOKEN = "8586920536:AAHmc9iFU073Zvj-Ebt9G9OtSut9FsWxB0c"
 bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode="HTML"))
 
-async def send_user_message(chat_id: int, product_name: str, webapp_url: str):
+async def send_user_message(chat_id: int, product_name: str, start_parameter: str):
     keyboard = types.InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 types.InlineKeyboardButton(
                     text="Открыть приложение",
-                    web_app=types.WebAppInfo(url=webapp_url)
+                    request_main_web_view={
+                        "bot_username": "more_stars_bot",
+                        "start_parameter": start_parameter,
+                        "mode": "fullscreen"
+                    }
                 )
             ]
         ]

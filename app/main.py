@@ -99,7 +99,7 @@ async def crypto_webhook(request: Request):
                 send_user_message(
                     chat_id=int(order.user_id),
                     product_name=order.product,
-                    webapp_url="https://t.me/more_stars_bot/app?startapp=1"
+                    start_parameter="1"  # <-- вместо webapp_url
                 )
             )
     db.close()
