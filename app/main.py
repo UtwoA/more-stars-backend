@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import FastAPI, Request
 from pydantic import BaseModel
 from dotenv import load_dotenv
@@ -94,12 +96,9 @@ async def crypto_webhook(request: Request):
         if status == "paid":
             order.status = "paid"
             db.commit()
-            import asyncio
             asyncio.create_task(
                 send_user_message(
-                    chat_id=int(order.user_id),
-                    product_name=order.product,
-                    start_parameter="1"  # <-- вместо webapp_url
+                    chat_id=int(order.user_id)
                 )
             )
     db.close()
