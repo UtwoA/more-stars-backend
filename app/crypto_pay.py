@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-CRYPTO_PAY_API_URL = "https://api.crypto.bot/v1/invoice"
+CRYPTO_PAY_API_URL = "https://testnet-pay.crypt.bot/v1/invoice"
 API_TOKEN = os.getenv("CRYPTO_PAY_API_TOKEN")  # твой токен
 
 
