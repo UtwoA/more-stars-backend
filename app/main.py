@@ -76,14 +76,25 @@ async def create_order(order: OrderCreate):
 async def crypto_webhook(request: Request):
     data = await request.json()
     print("WEBHOOK DATA:", data)
+
+    order_id = data.get("order_id")  # пусто для этого webhook
+    # Для crypto-платежа берём ID из payload
+    if "payload" in data:
+        order_id = data["payload"].get("payload")
+
+    if not order_id:
+        return {"status": "error", "message": "No order_id found"}
+
     db = SessionLocal()
-    order = db.query(Order).filter(Order.order_id == data.get("order_id")).first()
+    order = db.query(Order).filter(Order.order_id == order_id).first()
     if order:
-        if data.get("status") == "paid":
+        status = data.get("status") or data.get("payload", {}).get("status")
+        if status == "paid":
             order.status = "paid"
             db.commit()
     db.close()
     return {"status": "ok"}
+
 
 
 from fastapi import Query
