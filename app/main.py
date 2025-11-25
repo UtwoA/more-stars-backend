@@ -115,13 +115,20 @@ from datetime import datetime
 async def order_status(order_id: str = Query(...)):
     db = SessionLocal()
     order = db.query(Order).filter(Order.order_id == order_id).first()
-    db.close()
+
+    if not order:
+        db.close()
+        return {"error": "Order not found"}
+
+    # проверяем таймер до закрытия сессии
     if order.status == "created" and order.expires_at < datetime.utcnow():
         order.status = "failed"
         db.commit()
-    if order:
-        return {"order_id": order.order_id, "status": order.status}
-    return {"error": "Order not found"}
+
+    result = {"order_id": order.order_id, "status": order.status}
+    db.close()
+    return result
+
 
 
 @app.get("/last_order_status")
