@@ -153,3 +153,35 @@ async def last_order_status(user_id: str = Query(...)):
 
     db.close()
     return {"status": "none"}
+
+from fastapi import Query
+from typing import List
+
+@app.get("/order_history")
+async def order_history(user_id: str = Query(...), limit: int = 10):
+    """
+    Возвращает историю последних заказов пользователя
+    """
+    db = SessionLocal()
+    orders = (
+        db.query(Order)
+        .filter(Order.user_id == user_id)
+        .order_by(Order.timestamp.desc())
+        .limit(limit)
+        .all()
+    )
+    db.close()
+
+    result = [
+        {
+            "order_id": o.order_id,
+            "product": o.product,
+            "amount_rub": o.amount_rub,
+            "currency": o.currency,
+            "status": o.status,
+            "timestamp": o.timestamp.isoformat()
+        }
+        for o in orders
+    ]
+
+    return {"orders": result}
