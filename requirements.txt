@@ -1,6 +1,9 @@
 fastapi
 uvicorn
+httpx
 sqlalchemy
-psycopg2-binary
-requests
+pydantic
 python-dotenv
+hmac
+hashlib
+requests
