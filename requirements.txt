@@ -4,6 +4,3 @@ httpx
 sqlalchemy
 pydantic
 python-dotenv
-hmac
-hashlib
-requests
