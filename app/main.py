@@ -14,6 +14,8 @@ from .cactuspay import cactuspay_create_payment, cactuspay_get_status
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from .utils import now_msk
+
 MSK = ZoneInfo("Europe/Moscow")
 
 load_dotenv()
@@ -288,8 +290,3 @@ async def cactuspay_webhook(
 
     db.close()
     return {"status": "ok"}
-
-
-
-def now_msk():
-    return datetime.now(MSK)

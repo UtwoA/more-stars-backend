@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from sqlalchemy import Column, String, Integer, Float, DateTime
 from .database import Base
-from .main import now_msk
+from .utils import now_msk
 
 
 class Order(Base):
