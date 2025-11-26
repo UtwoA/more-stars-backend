@@ -10,7 +10,7 @@ from .database import SessionLocal, Base, engine
 from .models import Order
 from .crypto import convert_to_rub
 from datetime import timedelta
-from cactuspay import cactuspay_create_payment, cactuspay_get_status
+from .cactuspay import cactuspay_create_payment, cactuspay_get_status
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
