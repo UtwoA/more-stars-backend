@@ -241,9 +241,9 @@ async def create_order_sbp(order: OrderCreate):
         order_id=order_id,
         amount=order.amount,
         description=f"Покупка {order.product}",
-        method="nspk"
+        method="sbp"
     )
-    print("CREATE_ORDER_SBP RESPONSE:", payment)
+    print("CREATE_ORDER_SBP RESPONSE:", payment["response"])
     # Возвращаем URL для внешнего открытия
     return {"order_id": order_id, "pay_url": payment["response"]["url"]}
 
