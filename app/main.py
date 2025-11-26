@@ -10,7 +10,7 @@ from .database import SessionLocal, Base, engine
 from .models import Order
 from .crypto import convert_to_rub
 from datetime import datetime, timedelta
-
+from cactuspay import cactuspay_create_payment, cactuspay_get_status
 
 load_dotenv()
 CRYPTOBOT_TOKEN = os.getenv("CRYPTOBOT_TOKEN")  # твой testnet токен
@@ -201,3 +201,78 @@ def check_order_expired(order, db):
     if order.status == "created" and order.expires_at < datetime.utcnow():
         order.status = "failed"
         db.commit()
+
+
+@app.post("/create_order_sbp")
+async def create_order_sbp(order: OrderCreate):
+    db = SessionLocal()
+
+    order_id = str(uuid.uuid4())
+
+    db_order = Order(
+        order_id=order_id,
+        user_id=order.user_id,
+        recipient=order.recipient,
+        product=order.product,
+        amount_rub=order.amount,  # CactusPay работает в рублях
+        currency="RUB",
+        status="created",
+        type_of_payment="cactuspay_sbp",
+        timestamp=datetime.utcnow(),
+        expires_at=datetime.utcnow() + timedelta(minutes=10)
+    )
+    db.add(db_order)
+    db.commit()
+    db.refresh(db_order)
+
+    # создаём платёж
+    payment = await cactuspay_create_payment(
+        order_id=order_id,
+        amount=order.amount,
+        description=f"Покупка {order.product}",
+        method="sbp"
+    )
+
+    db.close()
+
+    return {
+        "order_id": order_id,
+        "payment": payment  # тут будет URL и QR
+    }
+
+from fastapi import Form
+
+@app.post("/webhook/cactuspay")
+async def cactuspay_webhook(
+    id: str = Form(...),
+    order_id: str = Form(...),
+    amount: float = Form(...)
+):
+    print("CACTUSPAY WEBHOOK RECEIVED:", id, order_id, amount)
+
+    db = SessionLocal()
+    order = db.query(Order).filter(Order.order_id == order_id).first()
+
+    if not order:
+        db.close()
+        return {"status": "error", "message": "Order not found"}
+
+    # после получения webhook ОБЯЗАНЫ проверить статус
+    cactus = await cactuspay_get_status(order_id)
+    status = cactus.get("response", {}).get("status")
+
+    # statuses: ACCEPT / WAIT
+    if status == "ACCEPT":
+        order.status = "paid"
+        db.commit()
+
+        asyncio.create_task(
+            send_user_message(
+                chat_id=int(order.user_id),
+                product_name=order.product
+            )
+        )
+
+    db.close()
+    return {"status": "ok"}
+
