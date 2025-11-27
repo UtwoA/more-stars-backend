@@ -45,11 +45,11 @@ async def send_purchase_to_robynhood(order):
 
     # ставим число в нужное поле
     if product_type == "stars":
-        payload["quantity"] = quantity
+        payload["quantity"] = str(quantity)
     elif product_type == "premium":
-        payload["months"] = quantity
+        payload["months"] = str(quantity)
     elif product_type == "ads":
-        payload["amount"] = quantity
+        payload["amount"] = str(quantity)
 
     headers = {
         "X-API-Key": ROBYNHOOD_API_TOKEN,
