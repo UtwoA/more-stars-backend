@@ -18,6 +18,9 @@ ROBYNHOOD_API_TOKEN = os.getenv("ROBYNHOOD_API_TOKEN")
 
 
 async def send_purchase_to_robynhood(order):
+    ROBYNHOOD_API_TOKEN = os.getenv("ROBYNHOOD_API_TOKEN")
+    if not ROBYNHOOD_API_TOKEN:
+        raise RuntimeError("ROBYNHOOD_API_TOKEN is not set")
     """
     Отправка заказа на Robynhood после успешной оплаты
     """
