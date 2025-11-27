@@ -19,24 +19,37 @@ ROBYNHOOD_API_TOKEN = os.getenv("ROBYNHOOD_API_TOKEN")
 
 import re
 
+import re
+
 async def send_purchase_to_robynhood(order):
     idempotency_key = str(uuid.uuid4())
 
-    # Преобразуем product для API
-    product_type = order.product.lower()  # "stars", "premium", "ads" — пусть приходит в order.product
+    # Определяем тип продукта
+    if "stars" in order.product.lower() or "⭐" in order.product:
+        product_type = "stars"
+        quantity = int(re.sub(r"\D", "", order.product))  # извлекаем число
+    elif "premium" in order.product.lower():
+        product_type = "premium"
+        quantity = int(re.sub(r"\D", "", order.product))
+    elif "ads" in order.product.lower():
+        product_type = "ads"
+        quantity = int(re.sub(r"\D", "", order.product))
+    else:
+        raise ValueError(f"Unknown product type: {order.product}")
+
     payload = {
         "product_type": product_type,
         "recipient": order.recipient,
         "idempotency_key": idempotency_key
     }
 
-    # Достаем числовое значение из строки (например, "50 ⭐" → 50)
+    # ставим число в нужное поле
     if product_type == "stars":
-        payload["quantity"] = int(re.sub(r"\D", "", order.product))  # оставляем только цифры
+        payload["quantity"] = quantity
     elif product_type == "premium":
-        payload["months"] = int(re.sub(r"\D", "", order.product))
+        payload["months"] = quantity
     elif product_type == "ads":
-        payload["amount"] = int(re.sub(r"\D", "", order.product))
+        payload["amount"] = quantity
 
     headers = {
         "X-API-Key": ROBYNHOOD_API_TOKEN,
@@ -59,4 +72,5 @@ async def send_purchase_to_robynhood(order):
     db.close()
 
     return resp
+
 
