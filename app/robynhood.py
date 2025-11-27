@@ -13,7 +13,7 @@ load_dotenv(dotenv_path=dotenv_path)
 
 logger = logging.getLogger("robynhood")
 
-ROBYNHOOD_API_URL = os.getenv("ROBYNHOOD_TEST_API_URL", "https://robynhood.parssms.info/api/test/purchase")
+ROBYNHOOD_API_URL = os.getenv("ROBYNHOOD_TEST_API_URL", "https://robynhood.parssms.info/api/purchase")
 ROBYNHOOD_API_TOKEN = os.getenv("ROBYNHOOD_API_TOKEN")
 
 
