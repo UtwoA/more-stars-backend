@@ -17,30 +17,26 @@ ROBYNHOOD_API_URL = os.getenv("ROBYNHOOD_TEST_API_URL", "https://robynhood.parss
 ROBYNHOOD_API_TOKEN = os.getenv("ROBYNHOOD_API_TOKEN")
 
 
+import re
+
 async def send_purchase_to_robynhood(order):
-    ROBYNHOOD_API_TOKEN = os.getenv("ROBYNHOOD_API_TOKEN")
-    if not ROBYNHOOD_API_TOKEN:
-        raise RuntimeError("ROBYNHOOD_API_TOKEN is not set")
-    """
-    Отправка заказа на Robynhood после успешной оплаты
-    """
     idempotency_key = str(uuid.uuid4())
 
+    # Преобразуем product для API
+    product_type = order.product.lower()  # "stars", "premium", "ads" — пусть приходит в order.product
     payload = {
-        "product_type": order.product,
+        "product_type": product_type,
         "recipient": order.recipient,
         "idempotency_key": idempotency_key
     }
 
-    # динамика товара
-    if order.product == "stars":
-        payload["quantity"] = 50
-
-    elif order.product == "premium":
-        payload["months"] = 3
-
-    elif order.product == "ads":
-        payload["amount"] = 1
+    # Достаем числовое значение из строки (например, "50 ⭐" → 50)
+    if product_type == "stars":
+        payload["quantity"] = int(re.sub(r"\D", "", order.product))  # оставляем только цифры
+    elif product_type == "premium":
+        payload["months"] = int(re.sub(r"\D", "", order.product))
+    elif product_type == "ads":
+        payload["amount"] = int(re.sub(r"\D", "", order.product))
 
     headers = {
         "X-API-Key": ROBYNHOOD_API_TOKEN,
@@ -63,3 +59,4 @@ async def send_purchase_to_robynhood(order):
     db.close()
 
     return resp
+
