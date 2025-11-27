@@ -304,7 +304,6 @@ async def cactuspay_webhook(
 # ---------------------
 # WEBHOOK: ROBYNHOOD
 # ---------------------
-from app.robynhood import verify_robynhood_signature  # если нужна проверка подписи
 
 @app.post("/webhook/robynhood")
 async def robynhood_webhook(request: Request):
