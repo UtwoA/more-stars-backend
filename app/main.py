@@ -300,3 +300,57 @@ async def cactuspay_webhook(
 
     db.close()
     return {"status": "ok"}
+
+# ---------------------
+# WEBHOOK: ROBYNHOOD
+# ---------------------
+from app.robynhood import verify_robynhood_signature  # если нужна проверка подписи
+
+@app.post("/webhook/robynhood")
+async def robynhood_webhook(request: Request):
+    data = await request.json()
+    logger.info(f"[ROBYNHOOD WEBHOOK] {data}")
+
+    # пример структуры RobynHood webhook:
+    # {
+    #   "idempotency_key": "...",
+    #   "status": "paid",
+    #   "product_type": "stars",
+    #   "recipient": "username",
+    #   "quantity": "50"
+    # }
+
+    idempotency_key = data.get("idempotency_key")
+    status = data.get("status")
+
+    if not idempotency_key:
+        logger.error("[ROBYNHOOD] No idempotency_key in webhook")
+        return {"status": "error"}
+
+    db = SessionLocal()
+
+    order = db.query(Order).filter(Order.idempotency_key == idempotency_key).first()
+    if not order:
+        logger.error(f"[ROBYNHOOD] Order not found for idempotency_key={idempotency_key}")
+        db.close()
+        return {"status": "error", "message": "Order not found"}
+
+    if status == "paid":
+        order.status = "paid"
+        db.commit()
+        logger.info(f"[ROBYNHOOD] Order {order.order_id} marked PAID")
+
+        asyncio.create_task(
+            send_user_message(
+                chat_id=int(order.user_id),
+                product_name=order.product
+            )
+        )
+
+    elif status == "failed":
+        order.status = "failed"
+        db.commit()
+        logger.info(f"[ROBYNHOOD] Order {order.order_id} marked FAILED")
+
+    db.close()
+    return {"status": "ok"}
