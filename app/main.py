@@ -9,8 +9,14 @@ from bot import send_user_message
 from .database import SessionLocal, Base, engine
 from .models import Order
 from .crypto import convert_to_rub
-from datetime import datetime, timedelta
+from datetime import timedelta
+from .cactuspay import cactuspay_create_payment, cactuspay_get_status
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
+from .utils import now_msk
+
+MSK = ZoneInfo("Europe/Moscow")
 
 load_dotenv()
 CRYPTOBOT_TOKEN = os.getenv("CRYPTOBOT_TOKEN")  # твой testnet токен
@@ -61,9 +67,10 @@ async def create_order(order: OrderCreate):
         currency=order.currency,
         status="created",
         type_of_payment="crypto",
-        timestamp=datetime.utcnow(),  # теперь корректно
-        expires_at=datetime.utcnow() + timedelta(minutes=1)
+        timestamp=now_msk(),
+        expires_at=now_msk() + timedelta(minutes=10)
     )
+
     db.add(db_order)
     db.commit()
     db.refresh(db_order)
@@ -189,7 +196,7 @@ async def order_history(user_id: str = Query(...), limit: int = 10):
             "amount_rub": o.amount_rub,
             "currency": o.currency,
             "status": o.status,
-            "timestamp": o.timestamp.isoformat()
+            "timestamp": o.timestamp.astimezone(MSK).isoformat()  # всегда МСК
         }
         for o in orders
     ]
@@ -197,10 +204,85 @@ async def order_history(user_id: str = Query(...), limit: int = 10):
     return {"orders": result}
 
 
+from datetime import datetime, timezone
+
 def check_order_expired(order, db):
-    if order.status == "created" and order.expires_at < datetime.utcnow():
+    now = now_msk()
+    if order.status == "created" and order.expires_at < now:
         order.status = "failed"
         db.commit()
+    return order
+
+@app.post("/create_order_sbp")
+async def create_order_sbp(order: OrderCreate):
+    db = SessionLocal()
+
+    order_id = str(uuid.uuid4())
+
+    db_order = Order(
+        order_id=order_id,
+        user_id=order.user_id,
+        recipient=order.recipient,
+        product=order.product,
+        amount_rub=order.amount,
+        currency="RUB",
+        status="created",
+        type_of_payment="cactuspay_sbp",
+        timestamp=now_msk(),
+        expires_at=now_msk() + timedelta(minutes=10)
+    )
+
+    db.add(db_order)
+    db.commit()
+    db.refresh(db_order)
+
+    # создаём платёж
+    payment = await cactuspay_create_payment(
+        order_id=order_id,
+        amount=order.amount,
+        description=f"Покупка {order.product}",
+        method="sbp"
+    )
+    print("CREATE_ORDER_SBP RESPONSE:", payment["response"])
+    # Возвращаем URL для внешнего открытия
+    return {"order_id": order_id, "pay_url": payment["response"]["url"]}
+
+from fastapi import Form
+
+@app.post("/webhook/cactuspay")
+async def cactuspay_webhook(
+    id: str = Form(...),
+    order_id: str = Form(...),
+    amount: float = Form(...)
+):
+    print("CACTUSPAY WEBHOOK RECEIVED:", id, order_id, amount)
+
+    db = SessionLocal()
+    order = db.query(Order).filter(Order.order_id == order_id).first()
+
+    if not order:
+        db.close()
+        return {"status": "error", "message": "Order not found"}
+
+    # после получения webhook ОБЯЗАНЫ проверить статус
+    cactus = await cactuspay_get_status(order_id)
+    status = cactus.get("response", {}).get("status")
+
+    # statuses: ACCEPT / WAIT
+    if status == "ACCEPT":
+        order.status = "paid"
+        db.commit()
+
+        asyncio.create_task(
+            send_user_message(
+                chat_id=int(order.user_id),
+                product_name=order.product
+            )
+        )
+
+    db.close()
+    return {"status": "ok"}
+
     return order
 
 @app.post("/create_order_sbp")
