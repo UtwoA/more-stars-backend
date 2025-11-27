@@ -15,7 +15,7 @@ from .models import Order
 from .utils import now_msk
 from .crypto import convert_to_rub
 from .cactuspay import cactuspay_create_payment, cactuspay_get_status
-from .bot import send_user_message
+from bot import send_user_message
 from .robynhood import send_purchase_to_robynhood
 
 # ------------------------------------------------------
