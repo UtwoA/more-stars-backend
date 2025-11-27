@@ -43,7 +43,7 @@ async def send_purchase_to_robynhood(order):
         payload["amount"] = 1
 
     headers = {
-        "Authorization": f"Bearer {ROBYNHOOD_API_TOKEN}",
+        "X-API-Key": ROBYNHOOD_API_TOKEN,
         "Content-Type": "application/json"
     }
 
