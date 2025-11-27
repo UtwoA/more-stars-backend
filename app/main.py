@@ -21,7 +21,8 @@ from .robynhood import send_purchase_to_robynhood
 # ------------------------------------------------------
 # INIT
 # ------------------------------------------------------
-load_dotenv()
+dotenv_path = "/var/www/crypto_mvp/more-stars-backend/.env"
+load_dotenv(dotenv_path=dotenv_path)
 
 CRYPTOBOT_TOKEN = os.getenv("CRYPTOBOT_TOKEN")
 CRYPTO_PAY_API_URL = "https://testnet-pay.crypt.bot/api/createInvoice"
@@ -160,7 +161,7 @@ def check_order_expired(order, db):
 async def order_status(order_id: str = Query(...)):
     db = SessionLocal()
     order = db.query(Order).filter(Order.order_id == order_id).first()
-    
+
 
     if not order:
         db.close()

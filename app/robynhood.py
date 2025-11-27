@@ -8,7 +8,8 @@ from .models import Order
 from .database import SessionLocal
 
 
-load_dotenv()
+dotenv_path = "/var/www/crypto_mvp/more-stars-backend/.env"
+load_dotenv(dotenv_path=dotenv_path)
 
 logger = logging.getLogger("robynhood")
 
