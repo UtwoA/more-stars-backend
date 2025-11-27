@@ -126,9 +126,11 @@ async def crypto_webhook(request: Request):
 
     db = SessionLocal()
     order = db.query(Order).filter(Order.order_id == order_id).first()
+    print("DEBUG order:", order, "order_id from webhook:", order_id)
 
     if order:
         status = data.get("status") or data.get("payload", {}).get("status")
+        print("DEBUG status from webhook:", status)
 
         if status == "paid":
             order.status = "paid"
@@ -158,6 +160,7 @@ def check_order_expired(order, db):
 async def order_status(order_id: str = Query(...)):
     db = SessionLocal()
     order = db.query(Order).filter(Order.order_id == order_id).first()
+    
 
     if not order:
         db.close()
