@@ -128,7 +128,7 @@ async def create_order(order: OrderCreate):
 # WEBHOOK CRYPTO
 # ------------------------------------------------------
 
-#@app.post("/webhook/crypto")
+@app.post("/webhook/crypto")
 async def crypto_webhook(request: Request, x_cryptopay_signature: str = Header(None)):
     headers = dict(request.headers)
     logger.info(f"Incoming headers: {json.dumps(headers)}")
