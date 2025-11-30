@@ -12,6 +12,7 @@ import httpx
 
 from dotenv import load_dotenv
 
+from .crypto_pay import verify_signature
 from .database import SessionLocal, Base, engine
 from .models import Order
 from .utils import now_msk
