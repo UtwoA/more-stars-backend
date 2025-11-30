@@ -134,23 +134,18 @@ async def create_order(order: OrderCreate):
 @app.post("/webhook/crypto")
 async def crypto_webhook(
     request: Request,
-    crypto_pay_api_signature: str = Header(None)  # <- изменено
+    crypto_pay_api_signature: str = Header(None)
 ):
     if not crypto_pay_api_signature:
         raise HTTPException(status_code=400, detail="Missing crypto-pay-api-signature header")
 
     raw_body = await request.body()
 
-    print("RAW BYTES EXACT:")
-    print(list(raw_body))  # выводит каждый байт реального тела
-
     print("RAW BODY STRING:")
     print(raw_body.decode("utf-8", errors="replace"))
-
     print("HEADER SIGNATURE:", crypto_pay_api_signature)
-    print("COMPUTED:", hmac.new(API_TOKEN.encode(), raw_body, hashlib.sha256).hexdigest())
 
-    if not debug_hmac(raw_body, crypto_pay_api_signature):
+    if not verify_signature(raw_body, crypto_pay_api_signature):
         raise HTTPException(status_code=403, detail="Invalid signature")
 
     data = await request.json()
@@ -177,7 +172,6 @@ async def crypto_webhook(
         db.close()
 
     return {"status": "ok"}
-
 
 # ------------------------------------------------------
 # ORDER STATUS

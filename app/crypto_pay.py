@@ -43,8 +43,12 @@ def create_invoice(amount: float, currency: str, order_id: str, recipient: str):
 
 def verify_signature(request_body: bytes, signature: str) -> bool:
     """
-    Проверка HMAC подписи вебхука Crypto Pay
+    Проверка HMAC подписи вебхука Crypto Pay.
+    Ключ — это SHA256 токена, а не сам токен.
     """
-    computed_signature = hmac.new(API_TOKEN.encode(), request_body, hashlib.sha256).hexdigest()
+    # SHA256 токена в виде байтов — это секретный ключ для HMAC
+    secret_key = hashlib.sha256(API_TOKEN.encode()).digest()
+    # HMAC-SHA256 от сырых байт запроса
+    computed_signature = hmac.new(secret_key, request_body, hashlib.sha256).hexdigest()
     logger.info(f"Computed signature: {computed_signature}")
     return hmac.compare_digest(computed_signature, signature)
